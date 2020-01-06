@@ -1,4 +1,4 @@
-#include <cstring>
+#include <string.h>
 #include <memory>
 
 typedef struct point
