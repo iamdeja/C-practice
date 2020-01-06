@@ -35,7 +35,8 @@ POINT segment_to_point(char* segment)
 
     // in case there is no comma:
     // (this should never happen)
-    return POINT();
+    POINT p = { 0, 0 };
+    return p;
 }
 
 POINT* Exam(char* pInput, int* pnPoints)
