@@ -1,5 +1,8 @@
 #include <string.h>
-#include <memory>
+#include <stdio.h>
+#include <stdlib.h>
+
+#pragma warning ( disable : 4996 ) // strok has been replaced by strok_s in C11, VS2019 considers it unsafe
 
 typedef struct point
 {
