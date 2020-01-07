@@ -10,10 +10,13 @@ char* Exam(char* pNames, DATE* pBirthdates, const char* pMonthToStudy);
 int main() {
 	char* pResult = Exam(names, birthdates, "Jun");
 
-	printf("%s", pResult);
-
-	free(pResult);
-	pResult = NULL;
+	if (pResult) {
+		printf("%s", pResult);
+		free(pResult);
+		pResult = NULL;
+	}
+	else
+		printf("No people found.");
 
 	return 0;
 }
@@ -35,6 +38,7 @@ char* Exam(char* pNames, DATE* pBirthdates, const char* pMonthToStudy) {
 			nBorn++;
 		}
 	}
+	if (!nBorn) return 0;
 	//printf("%d", nBorn);
 
 	//saves cordinates of people born this month
