@@ -40,7 +40,7 @@ EMPLOYEE* Exam(char* pInput) {
 	pOutput->pFirstName = (char*)calloc(len + 1, sizeof(char)); // allocates memory for the name
 	strncpy_s(pOutput->pFirstName, len + 1, pIndex, len); // copies the name to the struct
 
-	// middle name | Recommendation: make a function to handle
+	// middle name
 	if (namebool) {
 		StructUpdate(&pIndex, &pOutdex, &len, apb);
 		len++; // counting the space, for modular display
