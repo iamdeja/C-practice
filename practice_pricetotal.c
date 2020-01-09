@@ -28,6 +28,12 @@ int main()
 	}
 	free(pOutput);
 	pOutput = NULL;
+
+	while (_kbhit())
+		_getch();
+	printf("\nPress any key to close this window . . .\n");
+	_getch();
+
 	return 0;
 }
 
@@ -56,7 +62,7 @@ ITEM* Exam(char* pInput, int* pnItems)
 		// Name
 		char* pOutdex = strchr(pIndex, ',');
 		int len = pOutdex - pIndex;	// length of first word
-		pOutput[i].pName = (char*)calloc(len + 1, sizeof(char*)); // allocate memory for the first word: name
+		pOutput[i].pName = (char*)calloc(len + 1, sizeof(char)); // allocate memory for the first word: name
 		strncpy_s(pOutput[i].pName, len + 1, pIndex, len); // copies the name to the struct
 
 		char* pBeg = NULL;
