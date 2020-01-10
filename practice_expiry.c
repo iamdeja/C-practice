@@ -2,6 +2,12 @@
 #include "stdio.h"
 #include "string.h"
 
+#define SUCCESS 0
+#define MEMFL 1 // memory allocation failed
+int err_code = SUCCESS;
+
+int ErrCode(int);
+
 typedef struct item
 {
 	char* pName;
@@ -35,9 +41,19 @@ int main()
 		pOutput = NULL;
 	}
 	else
-	{
-		printf("Please check your input.");
-	}
+		switch (err_code)
+		{
+		case MEMFL:
+			printf("Memory allocation failure");
+			break;
+		default:
+			printf("Please check your input.");
+			break;
+		}
+	while (_kbhit())
+		_getch();
+	printf("\nPress any key to close this window . . .\n");
+	_getch();
 
 	return 0;
 }
@@ -45,18 +61,18 @@ int main()
 ITEM* Exam(char* pInput, char* pItemName)
 {
 	// Validation
-	if (!pInput || !*pInput)
-		return 0;
-	if (!pItemName || !*pItemName)
-		return 0;
+	if (!pInput || !*pInput) return 0;
+	if (!pItemName || !*pItemName) return 0;
 
 	// Name
 	char* pIndex = strstr(pInput, pItemName); // get index of the item name
-	if (!pIndex)
-		return 0;
+	if (!pIndex) return 0;
 	int len = strlen(pItemName);
+
 	ITEM* pOut = (ITEM*)calloc(1, sizeof(ITEM)); // allocate memory for the output
+	if (!pOut) return ErrCode(MEMFL); // in case memory allocation fails
 	pOut->pName = (char*)calloc(len + 1, sizeof(char)); // allocate memory for the string at pOut.pName, +1 for terminating zero with calloc
+	if (!pOut->pName) return ErrCode(MEMFL);
 	strncpy_s(pOut->pName, len + 1, pItemName, len); // copy the item name to the struct (len + 1, as fallback for terminating zero with _s)
 
 	// Detect Segment Start
@@ -72,15 +88,13 @@ ITEM* Exam(char* pInput, char* pItemName)
 
 	// Detect Quantity
 	pIndex = strstr(pSegStart, "Quantity:");
-	if (!pIndex)
-		return 0;
+	if (!pIndex) return 0;
 	pIndex = strpbrk(pIndex, "0123456789"); // find the number after 'Quantity:'
 	pOut->quantity = atoi(pIndex);
 
 	// Detect Date
 	pIndex = strstr(pSegStart, "Expires:");
-	if (!pIndex)
-		return 0;
+	if (!pIndex) return 0;
 	pIndex = strpbrk(pIndex, "0123456789"); // find number after 'Expires:' but before the dash
 	int month = atoi(pIndex);
 	pIndex = strchr(pSegStart, '-'); // find separator
@@ -98,4 +112,10 @@ int isOld(int m, int y)
 		return 1;
 	else
 		return 0;
+}
+
+int ErrCode(int n)
+{
+	err_code = n;
+	return 0;
 }

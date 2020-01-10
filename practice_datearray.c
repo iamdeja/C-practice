@@ -3,9 +3,13 @@
 #include "string.h"
 
 #define SUCCESS 0
+#define MEMFL 1 // memory allocation failed
+#define RALLOCFL 2 // reallocation memory failure
 #define NADA 10 // empty
 #define MISMATCH 11 // string not found
-err_msg = SUCCESS;
+int err_code = SUCCESS;
+
+char* pErrCode(int);
 
 typedef struct {
 	int day;
@@ -31,13 +35,19 @@ int main()
 	}
 	else
 	{
-		switch (err_msg)
+		switch (err_code)
 		{
 		case NADA:
 			printf("Inputs cannot be left empty!");
 			break;
 		case MISMATCH:
 			printf("No people born in that month found.");
+			break;
+		case MEMFL:
+			printf("Memory allocation failed.");
+			break;
+		case RALLOCFL:
+			printf("Memory reallocation failed");
 			break;
 		case SUCCESS:
 			printf("No Issues Found.");
@@ -53,18 +63,10 @@ int main()
 char* Exam(char* pNames, DATE* pBirthDates, const char* pMonthToStudy)
 {
 	// initialise
-	if (!pNames || !*pNames || !pBirthDates || !pMonthToStudy || !*pMonthToStudy)
-	{
-		err_msg = NADA;
-		return 0;
-	}
+	if (!pNames || !*pNames || !pBirthDates || !pMonthToStudy || !*pMonthToStudy) return pErrCode(NADA);
 	int nNames = NameCount(pNames);
 	int maxSols = SolCount(pBirthDates, pMonthToStudy, nNames); // number of names in output string, update string length
-	if (!maxSols)
-	{
-		err_msg = MISMATCH;
-		return 0;
-	}
+	if (!maxSols) return pErrCode(MISMATCH);
 
 	// variables and counters
 	char* pIndex = pNames;
@@ -73,9 +75,10 @@ char* Exam(char* pNames, DATE* pBirthDates, const char* pMonthToStudy)
 	int pfs = 0; // position from start
 	int finish = 0; // boolean
 
-	// allocatetions
+	// allocations
 	int* pStrLen = (int*)calloc(maxSols, sizeof(int));
 	char* pOut = (char*)calloc(strlen(pNames), sizeof(char)); // immediate buffer to avoid multiple reallocs
+	if (!pStrLen || !pOut) return pErrCode(MEMFL);
 
 	// fill pointers
 	for (int i = 0; i < nNames && !finish; i++)
@@ -86,7 +89,10 @@ char* Exam(char* pNames, DATE* pBirthDates, const char* pMonthToStudy)
 			nSols++;
 			pfs = len + pfs;
 			if (pOutdex && nSols == maxSols)
+			{
 				len = pOutdex - pIndex; // skip comma and space
+				finish++;
+			}
 			else if (pOutdex)
 				len = pOutdex - pIndex + 2; // add comma and space
 			else
@@ -101,7 +107,12 @@ char* Exam(char* pNames, DATE* pBirthDates, const char* pMonthToStudy)
 			pIndex = pOutdex + 2; // skip comma and space
 	}
 	pIndex = NULL;
-	pOut = realloc(pOut, Sum(pStrLen, maxSols));
+	// --- preventing heap reallocation failure, remediates warning C6308
+	char* tmp = NULL;
+	tmp = realloc(pOut, Sum(pStrLen, maxSols));
+	if (!tmp) return pErrCode(RALLOCFL);
+	pOut = tmp;
+	// ---
 	free(pStrLen);
 	pStrLen = NULL;
 
@@ -137,4 +148,10 @@ int Sum(int* pInput, int nFields)
 	for (int i = 0; i < nFields; i++)
 		n += pInput[i];
 	return ++n;
+}
+
+char* pErrCode(int n)
+{
+	err_code = n;
+	return NULL;
 }

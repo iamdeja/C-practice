@@ -2,6 +2,12 @@
 #include "stdio.h"
 #include "string.h"
 
+#define SUCCESS 0
+#define IFMEM 1 // memory allocation failed
+int err_code = SUCCESS;
+
+int IfMem();
+
 typedef struct {
 	char* pFirstName, * pMiddleName, * pLastName;
 	int Brutto, TaxCoefficient, Netto;
@@ -13,16 +19,27 @@ void StructUpdate(char**, char**, int*, char*);
 
 int main()
 {
-	char input[] = "John James Smith 15000";
+	char input[] = "John Smith 15000";
 	EMPLOYEE* pOutput = Exam(input);
-	// %% is escape sequence for %, no space between %s%s as this is handled by pOutput
-	printf("%s %s%s %d %d%% %d", pOutput->pFirstName, pOutput->pMiddleName, pOutput->pLastName, pOutput->Brutto, pOutput->TaxCoefficient, pOutput->Netto);
+	if (pOutput) {
+		// %% is escape sequence for %, no space between %s%s as this is handled by pOutput
+		printf("%s %s%s %d %d%% %d", pOutput->pFirstName, pOutput->pMiddleName, pOutput->pLastName, pOutput->Brutto, pOutput->TaxCoefficient, pOutput->Netto);
 
-	// freeing stuff
-	free(pOutput->pFirstName); pOutput->pFirstName = NULL;
-	if (pOutput->pMiddleName != "") free(pOutput->pMiddleName);
-	pOutput->pMiddleName = NULL;
-	free(pOutput->pLastName); pOutput->pLastName = NULL;
+		// freeing stuff
+		free(pOutput->pFirstName); pOutput->pFirstName = NULL;
+		if (pOutput->pMiddleName != "") free(pOutput->pMiddleName);
+		pOutput->pMiddleName = NULL;
+		free(pOutput->pLastName); pOutput->pLastName = NULL;
+	}
+	else
+		switch (err_code) {
+		case IFMEM:
+			printf("Memory allocation failed.");
+			break;
+		default:
+			printf("Something went wrong.");
+			break;
+		}
 
 	return 0;
 }
@@ -30,6 +47,7 @@ int main()
 EMPLOYEE* Exam(char* pInput) {
 	int namebool = MiddleName(pInput); // boolean determine if there is a middle name
 	EMPLOYEE* pOutput = (EMPLOYEE*)calloc(1, sizeof(EMPLOYEE)); // allocate memory for output struct
+	if (!pOutput) return IfMem;
 	char apb[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 	char* pIndex = strpbrk(pInput, apb);
@@ -38,6 +56,7 @@ EMPLOYEE* Exam(char* pInput) {
 
 	// first name
 	pOutput->pFirstName = (char*)calloc(len + 1, sizeof(char)); // allocates memory for the name
+	if (!pOutput->pFirstName) return IfMem;
 	strncpy_s(pOutput->pFirstName, len + 1, pIndex, len); // copies the name to the struct
 
 	// middle name
@@ -45,6 +64,7 @@ EMPLOYEE* Exam(char* pInput) {
 		StructUpdate(&pIndex, &pOutdex, &len, apb);
 		len++; // counting the space, for modular display
 		pOutput->pMiddleName = (char*)calloc(len + 1, sizeof(char));
+		if (!pOutput->pMiddleName) return IfMem;
 		strncpy_s(pOutput->pMiddleName, len + 1, pIndex, len);
 	}
 	else
@@ -53,6 +73,7 @@ EMPLOYEE* Exam(char* pInput) {
 	// last name
 	StructUpdate(&pIndex, &pOutdex, &len, apb);
 	pOutput->pLastName = (char*)calloc(len + 1, sizeof(char));
+	if (!pOutput->pLastName) return IfMem;
 	strncpy_s(pOutput->pLastName, len + 1, pIndex, len);
 	pOutdex = NULL;
 
@@ -95,4 +116,10 @@ void StructUpdate(char** pIndex, char** pOutdex, int* len, char* apb)
 	*pIndex = strpbrk(*pIndex + 1, apb); // update start of name
 	*pOutdex = strchr(*pIndex, ' '); // update end of name
 	*len = *pOutdex - *pIndex; // update length of word
+}
+
+int IfMem()
+{
+	err_code = IFMEM;
+	return 0;
 }

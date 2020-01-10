@@ -4,9 +4,12 @@
 #include "conio.h"
 
 #define SUCCESS 0
+#define MEMFL 1 // memory allocation failed
 #define EMPTY 10
 #define MISMATCH 11
-int err_msg = SUCCESS;
+int err_code = SUCCESS;
+
+int ErrCode(int);
 
 char** Exam(char*, char*);
 int WordCount(char*);
@@ -28,9 +31,10 @@ int main()
 		for (int i = 0; i < nr; i++)
 			printf("%s\n", ppOut[i]);
 		free(ppOut);
+		ppOut = NULL;
 	}
 	else {
-		switch (err_msg) {
+		switch (err_code) {
 			case EMPTY:
 				printf("String cannot be empty!");
 				break;
@@ -42,6 +46,7 @@ int main()
 				break;
 		}
 	}
+
 	while (_kbhit())
 		_getch();
 	printf("\nPress any key to close this window . . .\n");
@@ -54,15 +59,11 @@ char** Exam(char* pFirstNames, char* pLastNames)
 {
 	// validation
 	int words = WordCount(pFirstNames);
-	if (words == 0) {
-		return 0;
-	}
-	else if (words != WordCount(pLastNames)) {
-		err_msg = MISMATCH;
-		return 0;
-	}
+	if (words == 0) return 0;
+	else if (words != WordCount(pLastNames)) return ErrCode(MISMATCH);
 
 	char** ppOut = (char**)calloc(words, sizeof(char*));
+	if (!ppOut) return(MEMFL);
 
 	char *p1 = pFirstNames, *q1 = pLastNames;
 	int wLen1 = 0, wLen2 = 0;
@@ -87,6 +88,7 @@ char** Exam(char* pFirstNames, char* pLastNames)
 		}
 		if (!last) {
 			ppOut[i] = (char*)calloc(wLen1 + wLen2, sizeof(char)); // sizeof(char) = 1, calloc sets terminating zero
+			if (!ppOut[i]) return ErrCode(MEMFL);
 			strncpy_s(ppOut[i], wLen1 + 1, p1, wLen1); // second paramter in gets_s is a backup for calloc: terminating zero
 			ppOut[i][wLen1 - 1] = ' '; // comma to space
 			strncpy_s(ppOut[i] + wLen1, wLen2, q1, wLen2 - 1); // do not copy comma
@@ -95,6 +97,7 @@ char** Exam(char* pFirstNames, char* pLastNames)
 		}
 		else {
 			ppOut[i] = (char*)calloc(wLen1 + wLen2 + 2, sizeof(char)); // +2 for the space and terminating zero
+			if (!ppOut[i]) return ErrCode(MEMFL);
 			strncpy_s(ppOut[i], wLen1 + 1, p1, wLen1);
 			ppOut[i][wLen1] = ' ';
 			strncpy_s(ppOut[i] + wLen1 + 1, wLen2 + 1, q1, wLen2);
@@ -105,10 +108,7 @@ char** Exam(char* pFirstNames, char* pLastNames)
 
 int WordCount(char* pInput)
 {
-	if (!pInput || !*pInput) {
-		err_msg = EMPTY;
-		return 0;
-	}
+	if (!pInput || !*pInput) return ErrCode(EMPTY);
 	int count = 0;
 	char* pSearch = strchr(pInput, ' ');
 	while (pSearch)
@@ -116,6 +116,11 @@ int WordCount(char* pInput)
 		count++;
 		pSearch = strchr(pSearch + 1, ' ');
 	}
-	free(pSearch);
 	return ++count;
+}
+
+int ErrCode(int n)
+{
+	err_code = n;
+	return 0;
 }
